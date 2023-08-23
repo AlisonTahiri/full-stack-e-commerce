@@ -12,12 +12,29 @@ export function CartSummary() {
     totalPrice = 0,
     cartDetails,
     cartCount,
+    redirectToCheckout,
   } = useShoppingCart()
+
+  const [isLoading, setIsLoading] = useState(false)
+  const isDisabled = isLoading === true || cartCount === 0
 
   const shippingAmount = cartCount! > 0 ? 500 : 0
   const totalAmount = totalPrice + shippingAmount
 
-  function onCheckout() {}
+  async function onCheckout() {
+    setIsLoading(true)
+    const response = await fetch("/api/checkout", {
+      method: "POST",
+      body: JSON.stringify(cartDetails),
+    })
+    const data = await response.json()
+    const result = await redirectToCheckout(data.id)
+
+    if (result?.error) {
+      console.error(result)
+    }
+    setIsLoading(false)
+  }
 
   return (
     <section
@@ -50,9 +67,9 @@ export function CartSummary() {
       </dl>
 
       <div className="mt-6">
-        <Button className="w-full">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Loading...
+        <Button onClick={onCheckout} disabled={isDisabled} className="w-full">
+          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isLoading ? "Loading..." : "Checkout"}
         </Button>
       </div>
     </section>
